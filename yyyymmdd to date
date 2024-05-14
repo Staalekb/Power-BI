@@ -1,0 +1,4 @@
+// M / Power Query 
+
+Date.FromText(Text.PadStart(Text.From([-COLUMN-]), 8, "0"))
+
