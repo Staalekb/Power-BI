@@ -1,0 +1,12 @@
+// M / Power Query - last refresh 
+
+
+let
+    Kilde = #table(type table[Date Last Refreshed=datetime], {{DateTime.LocalNow()}}),
+    #"Duplisert kolonne" = Table.DuplicateColumn(Kilde, "Date Last Refreshed", "Date Last Refreshed - Kopier"),
+    #"Kolonner med nye navn" = Table.RenameColumns(#"Duplisert kolonne",{{"Date Last Refreshed - Kopier", "DateTimeZone"}}),
+    #"Endret type" = Table.TransformColumnTypes(#"Kolonner med nye navn",{{"DateTimeZone", type datetimezone}}),
+    #"Egendefinert lagt til" = Table.AddColumn(#"Endret type", "Oppdatert", each DateTimeZone.SwitchZone([DateTimeZone],2)),
+    #"Endret type1" = Table.TransformColumnTypes(#"Egendefinert lagt til",{{"Oppdatert", type datetime}})
+in
+    #"Endret type1"
