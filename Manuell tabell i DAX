@@ -1,0 +1,10 @@
+AlderYrkesaktivTable = 
+DATATABLE(
+    "Aldersgruppe", STRING,  // kolonneoverskrift 1
+    "Indeks", STRING,        // kolonneoverskrift 2
+    {
+        { "<20", 1 },  // verdier 1. rad       
+        { "20-66", 2 },
+        { ">66", 3 }
+    }
+)
