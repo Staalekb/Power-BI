@@ -1,0 +1,6 @@
+let
+   
+    url = "https://api.kartverket.no/kommuneinfo/v1/kommuner",
+    Source = Json.Document(Web.Contents(url))
+
+in Source
