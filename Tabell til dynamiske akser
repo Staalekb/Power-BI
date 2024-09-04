@@ -1,0 +1,12 @@
+
+// Eksempel på tabell for å dynamsik anngi y-akse //
+// Trekket ut volum-verdiene for de filtrerte idene //
+
+Ymax = 
+SUMMARIZE(
+    FILTER(
+        Fact_ByDay, 
+        Fact_ByDay[id] = "34304B3204701" || Fact_ByDay[id] = "99274B3204701"
+    ),
+    Fact_ByDay[volume]
+)
