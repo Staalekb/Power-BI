@@ -1,0 +1,2 @@
+FORMAT(([Verdi]),"#.0%"),  // Prosent
+FORMAT( [Verdi],"# ##0"),  // Tusen skilletegn
