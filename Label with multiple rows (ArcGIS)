@@ -1,0 +1,4 @@
+
+$feature['KommuneSamlet.GRUNNKRETS'] + TextFormatting.NewLine + $feature["dataPiv$.F0_6_år"] + TextFormatting.NewLine + 
+"(" + Text($feature["dataPiv$.F__0_6_år"] * 100, "#.#") + "%)"
+
