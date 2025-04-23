@@ -1,0 +1,47 @@
+let
+    Kilde = List.Numbers(0, 121),
+    TilTabell = Table.FromList(Kilde, Splitter.SplitByNothing(), {"alder"}),
+
+    // alderTodelt
+    MedAlderTodelt = Table.AddColumn(TilTabell, "alderTodelt", each if [alder] <= 17 then "0-18 år" else "18 år eller eldre"),
+    MedSorteringAlderTodelt = Table.AddColumn(MedAlderTodelt, "sorteringAlderTodelt", each if [alderTodelt] = "0-18 år" then 0 else 1),
+
+    // alderTredelt
+    MedAlderTredelt = Table.AddColumn(MedSorteringAlderTodelt, "alderTredelt", each 
+        if [alder] <= 19 then "0-19 år" 
+        else if [alder] <= 64 then "20-64 år" 
+        else "65 år eller eldre"),
+    MedSorteringAlderTredelt = Table.AddColumn(MedAlderTredelt, "sorteringAlderTredelt", each 
+        if [alderTredelt] = "0-19 år" then 0 
+        else if [alderTredelt] = "20-64 år" then 1 
+        else 2),
+
+    // alderFunksjon
+    MedAlderFunksjon = Table.AddColumn(MedSorteringAlderTredelt, "alderFunksjon", each 
+        if [alder] = 0 then "0 år"
+        else if [alder] >= 1 and [alder] <= 5 then "1-5 år"
+        else if [alder] >= 6 and [alder] <= 12 then "6-12 år"
+        else if [alder] >= 13 and [alder] <= 15 then "13-15 år"
+        else if [alder] >= 16 and [alder] <= 19 then "16-19 år"
+        else if [alder] >= 20 and [alder] <= 44 then "20-44 år"
+        else if [alder] >= 45 and [alder] <= 66 then "45-66 år"
+        else if [alder] >= 67 and [alder] <= 79 then "67-79 år"
+        else if [alder] >= 80 and [alder] <= 89 then "80-89 år"
+        else "90 år eller eldre"),
+
+    MedSorteringAlderFunksjon = Table.AddColumn(MedAlderFunksjon, "sorteringAlderFunksjon", each 
+        if [alderFunksjon] = "0 år" then 0
+        else if [alderFunksjon] = "1-5 år" then 1
+        else if [alderFunksjon] = "6-12 år" then 2
+        else if [alderFunksjon] = "13-15 år" then 3
+        else if [alderFunksjon] = "16-19 år" then 4
+        else if [alderFunksjon] = "20-44 år" then 5
+        else if [alderFunksjon] = "45-66 år" then 6
+        else if [alderFunksjon] = "67-79 år" then 7
+        else if [alderFunksjon] = "80-89 år" then 8
+        else 9),
+
+    // samlet
+    MedSamlet = Table.AddColumn(MedSorteringAlderFunksjon, "samlet", each "Samlet")
+in
+    MedSamlet
