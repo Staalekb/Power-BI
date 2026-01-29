@@ -3,7 +3,7 @@ let
     TilTabell = Table.FromList(Kilde, Splitter.SplitByNothing(), {"alder"}),
 
     // alderTodelt
-    MedAlderTodelt = Table.AddColumn(TilTabell, "alderTodelt", each if [alder] <= 17 then "0-18 år" else "18 år eller eldre"),
+    MedAlderTodelt = Table.AddColumn(TilTabell, "alderTodelt", each if [alder] <= 17 then "0-17 år" else "18 år eller eldre"),
     MedSorteringAlderTodelt = Table.AddColumn(MedAlderTodelt, "sorteringAlderTodelt", each if [alderTodelt] = "0-18 år" then 0 else 1),
 
     // alderTredelt
