@@ -1,0 +1,21 @@
+let
+    Kilde = List.Numbers(1880, 2050 - 1880+1),
+    TilTabell = Table.FromList(Kilde, Splitter.SplitByNothing(), {"Aarskull"}),
+    #"Added Custom" = Table.AddColumn(TilTabell, "Generasjon", each if [Aarskull] >= 1880 and [Aarskull] <= 1900 then "1 Den tapte generasjon" else 
+if [Aarskull] >= 1901 and [Aarskull] <= 1927 then "2 Den store generasjonen" else
+if [Aarskull] >= 1928 and [Aarskull] <= 1945 then "3 Den stille generasjonen" else
+if [Aarskull] >= 1946 and [Aarskull] <= 1964 then "4 Babyboomers" else
+if [Aarskull] >= 1965 and [Aarskull] <= 1980 then "5 Gen X" else
+if [Aarskull] >= 1981 and [Aarskull] <= 1996 then "6 Millenials" else 
+if [Aarskull] >= 1997 and [Aarskull] <= 2012 then "7 Gen Z" else
+if [Aarskull] >= 2013 and [Aarskull] <= 2025 then "8 Gen Alfa" else
+"9 Kommende generasjoner"),
+    #"Split Column by Character Transition" = Table.SplitColumn(#"Added Custom", "Generasjon", Splitter.SplitTextByCharacterTransition({"0".."9"}, (c) => not List.Contains({"0".."9"}, c)), {"Generasjon.1", "Generasjon.2"}),
+    #"Renamed Columns" = Table.RenameColumns(#"Split Column by Character Transition",{{"Generasjon.1", "GenerasjonIndeks"}, {"Generasjon.2", "Generasjon"}}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"GenerasjonIndeks", Int64.Type}}),
+    #"Trimmed Text" = Table.TransformColumns(#"Changed Type",{{"Generasjon", Text.Trim, type text}}),
+    #"Cleaned Text" = Table.TransformColumns(#"Trimmed Text",{{"Generasjon", Text.Clean, type text}})
+in
+    #"Cleaned Text"
+
+// Oppkobling mot generert aarskull-kolonne, f.eks. (aarskull = 'Befolkning'[år] - Befolkning[alder]) //
