@@ -8,8 +8,9 @@ if [Aarskull] >= 1946 and [Aarskull] <= 1964 then "4 Babyboomers" else
 if [Aarskull] >= 1965 and [Aarskull] <= 1980 then "5 Gen X" else
 if [Aarskull] >= 1981 and [Aarskull] <= 1996 then "6 Millenials" else 
 if [Aarskull] >= 1997 and [Aarskull] <= 2012 then "7 Gen Z" else
-if [Aarskull] >= 2013 and [Aarskull] <= 2025 then "8 Gen Alfa" else
-"9 Framtidige generasjoner"),
+if [Aarskull] >= 2013 and [Aarskull] <= 2024 then "8 Gen Alfa" else
+if [Aarskull] >= 2025 and [Aarskull] <= 2039 then "9 Gen Beta" else
+"10 Framtidige generasjoner"),
     #"Split Column by Character Transition" = Table.SplitColumn(#"Added Custom", "Generasjon", Splitter.SplitTextByCharacterTransition({"0".."9"}, (c) => not List.Contains({"0".."9"}, c)), {"Generasjon.1", "Generasjon.2"}),
     #"Renamed Columns" = Table.RenameColumns(#"Split Column by Character Transition",{{"Generasjon.1", "GenerasjonIndeks"}, {"Generasjon.2", "Generasjon"}}),
     #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"GenerasjonIndeks", Int64.Type}}),
@@ -17,5 +18,3 @@ if [Aarskull] >= 2013 and [Aarskull] <= 2025 then "8 Gen Alfa" else
     #"Cleaned Text" = Table.TransformColumns(#"Trimmed Text",{{"Generasjon", Text.Clean, type text}})
 in
     #"Cleaned Text"
-
-// Oppkobling mot generert aarskull-kolonne, f.eks. (aarskull = 'Befolkning'[år] - Befolkning[alder]) //
