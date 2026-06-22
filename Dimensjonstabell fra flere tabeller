@@ -1,0 +1,7 @@
+dim_periode = 
+DISTINCT(
+    UNION(
+        SELECTCOLUMNS('06035: Selveierboliger, etter region, år og boligtype', "tid", '06035: Selveierboliger, etter region, år og boligtype'[tid]),
+        SELECTCOLUMNS('06944: Inntekt for husholdninger, etter region, år og husholdningstype', "tid", '06944: Inntekt for husholdninger, etter region, år og husholdningstype'[tid])
+    )
+)
