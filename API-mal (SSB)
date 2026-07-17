@@ -1,0 +1,55 @@
+let
+    URL = "https://data.ssb.no/api/pxwebapi/v2/tables/14288/data?lang=no&outputFormat=json-stat2&valuecodes[ContentsCode]=Personer&valuecodes[Tid]=*&valuecodes[Region]=1103&codelist[Region]=vs_KommunFram2024Agg&valuecodes[Alder]=*&codelist[Alder]=vs_AlleAldre00B&valuecodes[Kjonn]=*&heading=ContentsCode,Tid,Alder&stub=Region,Kjonn",
+    Source = Json.Document(Web.Contents(URL)),
+    
+    // 1. Hent ut selve dimensjons-objektet
+    Dimension = Source[dimension],
+
+    // 2. Finn rekkefølgen (id-listen i JSON-stat2 rot-nivå)
+    DimOrder = if Record.HasFields(Source, "id") then Source[id] else Record.FieldNames(Dimension),
+    
+    // 3. Funksjon for å hente BÅDE koder og labels som en liste med records
+    GetDimData = (fieldName as text) => 
+        let
+            DimRecord = Record.Field(Dimension, fieldName),
+            Category = DimRecord[category],
+            Codes = Record.FieldNames(Category[label]),   // Henter kodene (f.eks. "1103")
+            Labels = Record.FieldValues(Category[label]), // Henter tekstene (f.eks. "Stavanger")
+            Zip = List.Zip({Codes, Labels}),
+            ToRecords = List.Transform(Zip, each [Code = _{0}, Label = _{1}])
+        in
+            ToRecords,
+
+    // 4. Start med en tom tabell (en rad med tom record)
+    InitialTable = Table.FromRecords({[]}),
+
+    // 5. ENDRET: Dynamisk utvidelse av alle dimensjoner med både kode og label
+    BuildTable = List.Accumulate(
+        DimOrder, 
+        InitialTable, 
+        (state, currentDim) => 
+            let
+                DimData = GetDimData(currentDim),
+                AddCol = Table.AddColumn(state, currentDim, each DimData),
+                ExpandedList = Table.ExpandListColumn(AddCol, currentDim),
+                // Ekspanderer recorden til to kolonner: en for Kode og en for Label
+                ExpandedRecord = Table.ExpandRecordColumn(ExpandedList, currentDim, {"Code", "Label"}, {currentDim & " Kode", currentDim})
+            in
+                ExpandedRecord
+    ),
+
+    // 6. Koble på verdiene
+    Values = Source[value],
+    AddIndex = Table.AddIndexColumn(BuildTable, "Index", 0, 1, Int64.Type),
+    FinalTable = Table.AddColumn(AddIndex, "Verdi", each try Values{[Index]} otherwise null, type number),
+
+    // 7. Legg til metadata
+    Metadata = if Record.HasFields(Source, "note") then Text.Combine(Source[note], " / ") else "Ingen metadata",
+    AddMeta = Table.AddColumn(FinalTable, "Tabellnavn", each Source[label]),
+    AddUpdated = Table.AddColumn(AddMeta, "SistOppdatert", each Source[updated]),
+
+    // 8. Rydd opp
+    FjernIndex = Table.RemoveColumns(AddUpdated, {"Index"}),
+    #"Format SistOppdatert" = Table.TransformColumnTypes(FjernIndex, {{"Verdi", type number}, {"SistOppdatert", type datetimezone}})
+in
+    #"Format SistOppdatert"
