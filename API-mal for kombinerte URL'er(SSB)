@@ -1,0 +1,56 @@
+let
+    // 1. Definer URL-listen
+    URLs = {
+        "https://data.ssb.no/api/pxwebapi/v2/tables/04859/data?lang=no&outputFormat=json-stat2&valuecodes[Tid]=*&valuecodes[TettSted]=0001&valuecodes[ContentsCode]=Bosatte&heading=Tid,ContentsCode&stub=TettSted",
+
+        "https://data.ssb.no/api/pxwebapi/v2/tables/04859/data?lang=no&outputFormat=json-stat2&valuecodes[Tid]=*&valuecodes[TettSted]=0002&valuecodes[ContentsCode]=Bosatte&heading=Tid,ContentsCode&stub=TettSted",
+        
+        "https://data.ssb.no/api/pxwebapi/v2/tables/04859/data?lang=no&outputFormat=json-stat2&valuecodes[Tid]=*&valuecodes[TettSted]=0003&valuecodes[ContentsCode]=Bosatte&heading=Tid,ContentsCode&stub=TettSted"
+    },
+
+    // 2. Gjør om din eksisterende logikk til en funksjon
+    GetData = (URL as text) =>
+    let
+        Source = Json.Document(Web.Contents(URL)),
+        Dimension = Source[dimension],
+        DimOrder = if Record.HasFields(Source, "id") then Source[id] else Record.FieldNames(Dimension),
+        
+        GetDimData = (fieldName as text) =>
+        let
+            DimRecord = Record.Field(Dimension, fieldName),
+            Category = DimRecord[category],
+            Codes = Record.FieldNames(Category[label]),
+            Labels = Record.FieldValues(Category[label]),
+            Zip = List.Zip({Codes, Labels}),
+            ToRecords = List.Transform(Zip, each [Code = _{0}, Label = _{1}])
+        in
+            ToRecords,
+
+        InitialTable = Table.FromRecords({[]}),
+        BuildTable = List.Accumulate(
+            DimOrder,
+            InitialTable,
+            (state, currentDim) =>
+            let
+                DimData = GetDimData(currentDim),
+                AddCol = Table.AddColumn(state, currentDim, each DimData),
+                ExpandedList = Table.ExpandListColumn(AddCol, currentDim),
+                ExpandedRecord = Table.ExpandRecordColumn(ExpandedList, currentDim, {"Code", "Label"}, {currentDim & " Kode", currentDim})
+            in
+                ExpandedRecord
+        ),
+        Values = Source[value],
+        AddIndex = Table.AddIndexColumn(BuildTable, "Index", 0, 1, Int64.Type),
+        FinalTable = Table.AddColumn(AddIndex, "Verdi", each try Values{[Index]} otherwise null, type number),
+        AddMeta = Table.AddColumn(FinalTable, "Tabellnavn", each Source[label]),
+        AddUpdated = Table.AddColumn(AddMeta, "SistOppdatert", each Source[updated]),
+        FjernIndex = Table.RemoveColumns(AddUpdated, {"Index"}),
+        Result = Table.TransformColumnTypes(FjernIndex, {{"Verdi", type number}, {"SistOppdatert", type datetimezone}})
+    in
+        Result,
+
+    // 3. Bruk funksjonen på alle URL-er og slå sammen tabellene
+    TableList = List.Transform(URLs, each GetData(_)),
+    CombinedTable = Table.Combine(TableList)
+in
+    CombinedTable
