@@ -1,0 +1,27 @@
+Generiske measure = 
+
+// Erstatt tabell[kolonne]-navn og format med utgangspunkt i valgt measure
+
+var maxTid = CALCULATE(MAX(dim_periode[periode]))
+var minTid = CALCULATE(MIN(dim_periode[periode]))
+
+var venstreparanntes = " ("
+var hoyreparanes = ")"
+
+var antall_gjeldende = CALCULATE(SUMX(faktatabell,faktatabell[verdi]), dim_periode[periode] = maxTid)
+var antall_baseline = CALCULATE(SUMX(faktatabell,faktatabell[verdi]), dim_periode[periode] = minTid)
+var utvikling = (antall_gjeldende - antall_baseline)
+var prosent_utvikling = DIVIDE(utvikling,antall_baseline)
+
+// Andel av total for valgt kategori
+Var antall_kategori = CALCULATE(SUMX(faktatabell,faktatabell[verdi]))
+var antall_samlet = CALCULATE(SUMX(faktatabell,faktatabell[verdi]), REMOVEFILTERS(dim_kategori[kat]))
+var andel = DIVIDE(antall_kategori, antall_samlet)
+
+// KPI i tekstformat [pil,utvikling, (prosentutvikling] i absolutte verdier
+var pilretning = IF(utvikling = 0, "-", IF(utvikling > 0, "▲ ", IF(utvikling <0, "▼ ")))
+var farge = IF(utvikling = 0, 0, IF(utvikling > 0,1, IF(utvikling <0, -1)))
+var KPI_format = pilretning & (FORMAT(ABS(utvikling),"# ###") & venstreparanntes & FORMAT(ABS(prosent_utvikling),"0.0%") & hoyreparanes)
+
+// Velg measure 
+RETURN KPI_format
