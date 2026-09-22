@@ -1,0 +1,5 @@
+DatoFormat = 
+     DATE(
+        VALUE(LEFT(datoformat[dato], 4)), 
+        VALUE(MID('datoformat'[dato], 5, 2)),
+        VALUE(RIGHT(datoformat[dato],2)))
